@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, CheckCircle2, Circle, ChevronRight, Calendar } from 'lucide-react';
+import { Plus, CheckCircle2, Circle, ChevronRight, Calendar, ArrowLeft } from 'lucide-react';
 
-const ThingsStyleApp = () => {
+const ThingsStyleApp = ({ onBack }) => {
   const [goals, setGoals] = useState(() => {
     const saved = localStorage.getItem('weeklyGoals');
     return saved ? JSON.parse(saved) : [];
@@ -42,13 +42,21 @@ const ThingsStyleApp = () => {
   return (
     <div className="min-h-screen bg-gray-100/80 px-4 py-8">
       <div className="max-w-2xl mx-auto">
-        {/* Header Area */}
+        {/* Header Area with Back Button */}
         <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-2xl font-medium text-gray-900">This Week</h1>
-            <p className="text-sm text-gray-500 mt-1">
-              {goals.filter(g => g.completed).length} of {goals.length} completed
-            </p>
+          <div className="flex items-center">
+            <button 
+              onClick={onBack}
+              className="mr-4 p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-200/50 transition-colors"
+            >
+              <ArrowLeft size={20} />
+            </button>
+            <div>
+              <h1 className="text-2xl font-medium text-gray-900">This Week</h1>
+              <p className="text-sm text-gray-500 mt-1">
+                {goals.filter(g => g.completed).length} of {goals.length} completed
+              </p>
+            </div>
           </div>
           <div className="flex items-center space-x-4">
             <button className="p-2 text-gray-400 hover:text-gray-600">
