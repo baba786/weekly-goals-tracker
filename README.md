@@ -2,8 +2,6 @@
 
 A minimal and elegant goals tracking application inspired by Things app design principles. Set and track up to 5 key goals for your week with a beautiful, distraction-free interface.
 
-![Weekly Goals Tracker](public/preview.png)
-
 ## Features
 
 - ✨ Clean, minimal interface inspired by Things app
@@ -51,7 +49,7 @@ Add this to your `tailwind.config.js`:
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    "./src/**/*.{js,jsx,ts,tsx}",
+    './src/**/*.{js,jsx,ts,tsx}',
   ],
   theme: {
     extend: {},
