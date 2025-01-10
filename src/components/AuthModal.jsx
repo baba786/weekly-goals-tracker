@@ -47,8 +47,7 @@ const AuthModal = ({ onClose, onAuth }) => {
 
     setIsLoading(true);
     try {
-      // Simulate authentication delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Attempt authentication
       onAuth(formData);
     } catch (err) {
       setError('Authentication failed. Please try again.');
@@ -198,7 +197,7 @@ const AuthModal = ({ onClose, onAuth }) => {
                 </div>
 
                 <div className="mt-4 text-center text-xs text-gray-500">
-                  <p>Demo mode: Use any email/password</p>
+                  <p>Please use a strong password</p>
                 </div>
               </div>
             </div>
