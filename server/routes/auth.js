@@ -9,27 +9,72 @@ router.post('/register', async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    const userExists = await User.findOne({ email });
+    // Input validation
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: 'Please provide all required fields' });
+    }
+
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ message: 'Please provide a valid email address' });
+    }
+
+    // Check if user exists with timeout
+    const userExists = await Promise.race([
+      User.findOne({ email }).maxTimeMS(10000),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Database operation timeout')), 10000)
+      )
+    ]);
+
     if (userExists) {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    const user = await User.create({
-      name,
-      email,
-      password
-    });
+    // Create user with timeout
+    const user = await Promise.race([
+      User.create({
+        name,
+        email,
+        password
+      }),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Database operation timeout')), 15000)
+      )
+    ]);
 
     if (user) {
+      // Generate token and send response
+      const token = generateToken(user._id);
       res.status(201).json({
         _id: user._id,
         name: user.name,
         email: user.email,
-        token: generateToken(user._id)
+        token
       });
+    } else {
+      throw new Error('Failed to create user');
     }
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    console.error('Registration error:', error);
+    
+    if (error.message === 'Database operation timeout') {
+      res.status(504).json({ 
+        message: 'Registration request timed out. Please try again.',
+        error: 'timeout'
+      });
+    } else if (error.code === 11000) {
+      res.status(400).json({ 
+        message: 'User already exists',
+        error: 'duplicate'
+      });
+    } else {
+      res.status(400).json({ 
+        message: error.message,
+        error: 'unknown'
+      });
+    }
   }
 });
 

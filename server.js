@@ -28,17 +28,35 @@ app.use(cors());
 app.use(express.json());
 app.use(limiter);
 
-// Connect to MongoDB with retry logic and timeout settings
+// Configure mongoose for better performance and reliability
+mongoose.set('bufferCommands', false);
+
+// Connect to MongoDB with optimized settings
 const connectDB = async () => {
   try {
     const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/weekly-goals', {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       retryWrites: true,
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 30000, // Increased from 5000
       socketTimeoutMS: 45000,
-      connectTimeoutMS: 10000,
+      connectTimeoutMS: 30000, // Increased from 10000
+      maxPoolSize: 10,
+      minPoolSize: 2,
+      maxIdleTimeMS: 30000,
+      waitQueueTimeoutMS: 10000,
     });
+    
+    // Add connection error handlers
+    mongoose.connection.on('error', err => {
+      console.error('MongoDB connection error:', err);
+    });
+
+    mongoose.connection.on('disconnected', () => {
+      console.log('MongoDB disconnected. Attempting to reconnect...');
+      setTimeout(connectDB, 5000);
+    });
+
     console.log(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
     console.error(`Error: ${error.message}`);
