@@ -91,15 +91,23 @@ const checkDbConnection = (req, res, next) => {
   next();
 };
 
+// Serve static files from the dist directory
+app.use(express.static(join(__dirname, 'dist')));
+
+// API routes with database connection check
+app.use('/api/auth', checkDbConnection, authRouter);
+app.use('/api/goals', checkDbConnection, goalsRouter);
+
+// Handle client-side routing
+app.get('*', (req, res) => {
+  res.sendFile(join(__dirname, 'dist', 'index.html'));
+});
+
 // Initialize database connection before starting server
 (async () => {
   try {
     await connectDB();
     
-    // API routes with database connection check
-    app.use('/api/auth', checkDbConnection, authRouter);
-    app.use('/api/goals', checkDbConnection, goalsRouter);
-
     // Start server only after successful database connection
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
@@ -109,15 +117,3 @@ const checkDbConnection = (req, res, next) => {
     process.exit(1);
   }
 })();
-
-// Serve static files from the dist directory
-app.use(express.static(join(__dirname, 'dist')));
-
-// Handle client-side routing
-app.get('*', (req, res) => {
-  res.sendFile(join(__dirname, 'dist', 'index.html'));
-});
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
