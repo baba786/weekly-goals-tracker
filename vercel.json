@@ -8,7 +8,10 @@
     {
       "src": "package.json",
       "use": "@vercel/static-build",
-      "config": { "zeroConfig": true }
+      "config": { 
+        "zeroConfig": true,
+        "distDir": "dist"
+      }
     }
   ],
   "routes": [
@@ -17,9 +20,11 @@
       "dest": "server.js"
     },
     {
+      "handle": "filesystem"
+    },
+    {
       "src": "/(.*)",
-      "dest": "/dist/$1",
-      "continue": true
+      "dest": "server.js"
     }
   ]
 }
