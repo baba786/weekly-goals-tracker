@@ -14,16 +14,18 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// Create Express app
 const app = express();
 
-// Configure mongoose first
+// Configure mongoose
 mongoose.set('strictQuery', true);
 
-// Initialize MongoDB connection
+// MongoDB connection with serverless optimizations
 const connectDB = async () => {
   try {
-    if (mongoose.connection.readyState !== 0) {
-      return; // Already connected or connecting
+    // Skip if already connected or connecting
+    if (mongoose.connection.readyState === 1) {
+      return mongoose.connection;
     }
 
     if (!process.env.MONGODB_URI) {
@@ -33,7 +35,6 @@ const connectDB = async () => {
     const options = {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      bufferCommands: false,
       maxPoolSize: 1,
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 10000,
@@ -41,93 +42,112 @@ const connectDB = async () => {
       family: 4
     };
 
-    await mongoose.connect(process.env.MONGODB_URI, options);
-    console.log('MongoDB connected');
+    const conn = await mongoose.connect(process.env.MONGODB_URI, options);
+    console.log(`MongoDB Connected: ${conn.connection.host}`);
+    return conn;
   } catch (error) {
-    console.error('MongoDB connection error:', error);
+    console.error('MongoDB connection error:', {
+      message: error.message,
+      code: error.code,
+      name: error.name
+    });
     throw error;
   }
 };
 
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100
+});
+
 // Middleware
 app.use(cors({
   origin: true,
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 }));
 app.use(express.json());
-app.use(rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100
-}));
+app.use(limiter);
 
-// Test routes first
+// Diagnostic endpoints
 app.get('/api/test', (req, res) => {
-  res.json({ 
+  res.json({
     message: 'API is working',
+    timestamp: new Date().toISOString(),
     env: {
       nodeEnv: process.env.NODE_ENV,
-      hasMongoUri: !!process.env.MONGODB_URI,
-      hasJwtSecret: !!process.env.JWT_SECRET
+      mongodbUri: process.env.MONGODB_URI ? 'Set' : 'Not set',
+      jwtSecret: process.env.JWT_SECRET ? 'Set' : 'Not set'
     }
   });
 });
 
 app.get('/api/test-db', async (req, res) => {
   try {
-    await connectDB();
-    res.json({ 
+    const conn = await connectDB();
+    res.json({
       dbState: mongoose.connection.readyState,
       stateMessage: ['disconnected', 'connected', 'connecting', 'disconnecting'][mongoose.connection.readyState],
-      host: mongoose.connection.host
+      host: conn.connection.host,
+      timestamp: new Date().toISOString()
     });
   } catch (error) {
-    res.status(500).json({ 
+    res.status(500).json({
       error: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      timestamp: new Date().toISOString()
     });
   }
 });
 
-// Middleware to ensure DB connection
-const ensureDbConnection = async (req, res, next) => {
+// Database connection middleware
+const checkDbConnection = async (req, res, next) => {
   try {
     await connectDB();
     next();
   } catch (error) {
-    res.status(503).json({
-      message: 'Database connection failed',
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Connection Error'
+    console.error('Database connection error in middleware:', error);
+    return res.status(503).json({
+      message: 'Database connection not available',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'db_connection_error'
     });
   }
 };
 
+// Static files
+app.use(express.static(join(__dirname, 'dist')));
+
 // API routes
-app.use('/api/auth', ensureDbConnection, authRouter);
-app.use('/api/goals', ensureDbConnection, goalsRouter);
+app.use('/api/auth', checkDbConnection, authRouter);
+app.use('/api/goals', checkDbConnection, goalsRouter);
 
-// Serve static files
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(join(__dirname, 'dist')));
-  
-  app.get('*', (req, res) => {
-    res.sendFile(join(__dirname, 'dist', 'index.html'));
-  });
-}
+// Client-side routing
+app.get('*', (req, res) => {
+  res.sendFile(join(__dirname, 'dist', 'index.html'));
+});
 
-// Error handler
+// Error handling
 app.use((err, req, res, next) => {
-  console.error(err);
+  console.error('Global error:', err);
   res.status(500).json({
     message: 'Internal Server Error',
-    error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    error: process.env.NODE_ENV === 'development' ? err.message : undefined,
+    timestamp: new Date().toISOString()
   });
 });
 
-// Only start server if not in serverless environment
+// Graceful shutdown handlers
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received. Performing graceful shutdown...');
+  mongoose.connection.close();
+  process.exit(0);
+});
+
+// Development server
 if (process.env.NODE_ENV !== 'production') {
   const PORT = process.env.PORT || 3001;
   app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`Development server running on port ${PORT}`);
   });
 }
 
