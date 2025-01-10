@@ -24,7 +24,10 @@ const limiter = rateLimit({
 });
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: true, // Replace with your frontend URL in production
+  credentials: true
+}));
 app.use(express.json());
 app.use(limiter);
 
@@ -46,6 +49,8 @@ const connectDB = async () => {
       serverSelectionTimeoutMS: 5000, // Reduce timeout for faster failure
       socketTimeoutMS: 15000,
       connectTimeoutMS: 10000,
+      retryWrites: true,
+      w: 'majority', // Add this for better write consistency
     };
 
     const conn = await mongoose.connect(process.env.MONGODB_URI, options);
@@ -85,6 +90,27 @@ app.get('*', (req, res) => {
   res.sendFile(join(__dirname, 'dist', 'index.html'));
 });
 
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ 
+    message: 'Internal Server Error',
+    error: process.env.NODE_ENV === 'development' ? err.message : undefined
+  });
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  process.exit(1);
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
+});
+
 // Start server with connection handling
 const startServer = async () => {
   try {
@@ -99,3 +125,5 @@ const startServer = async () => {
 };
 
 startServer();
+
+export default app;
