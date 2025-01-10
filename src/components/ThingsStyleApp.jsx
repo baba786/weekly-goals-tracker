@@ -3,9 +3,9 @@ import { Plus, Target } from 'lucide-react';
 import GoalItem from './GoalItem';
 import SimpleGoalEditor from './SimpleGoalEditor';
 import QuickGoalInput from './QuickGoalInput';
+import { useAuth } from '../context/AuthContext';
 
-// Using localStorage instead of API for now
-const STORAGE_KEY = 'weekly_goals';
+const API_URL = import.meta.env.VITE_API_URL;
 
 // Loading spinner component
 const LoadingSpinner = () => (
@@ -21,39 +21,54 @@ const ThingsStyleApp = ({ user }) => {
   const [error, setError] = useState(null);
   const [editingGoal, setEditingGoal] = useState(null);
 
-  // Load goals from localStorage on component mount
-  useEffect(() => {
-    try {
-      setIsLoading(true);
-      const savedGoals = localStorage.getItem(STORAGE_KEY);
-      if (savedGoals) {
-        const parsedGoals = JSON.parse(savedGoals);
-        console.log('Loaded goals:', parsedGoals);
-        setGoals(parsedGoals.map(goal => ({
-          ...goal,
-          id: goal._id || goal.id || Date.now().toString() // Ensure each goal has an id
-        })));
-      }
-    } catch (err) {
-      console.error('Error loading goals:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const { user } = useAuth();
 
-  const toggleGoal = (id) => {
-    console.log('Toggling goal with id:', id);
-    try {
-      const updatedGoals = goals.map(goal => {
-        if ((goal._id || goal.id) === id) {
-          console.log('Found goal to toggle:', goal);
-          return { ...goal, completed: !goal.completed };
+  // Load goals from API on component mount
+  useEffect(() => {
+    const fetchGoals = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch(`${API_URL}/goals/current`, {
+          headers: {
+            'Authorization': `Bearer ${user.token}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch goals');
         }
-        return goal;
+
+        const data = await response.json();
+        setGoals(data);
+      } catch (err) {
+        console.error('Error loading goals:', err);
+        setError('Failed to load goals. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchGoals();
+  }, [user.token]);
+
+  const toggleGoal = async (id) => {
+    try {
+      const response = await fetch(`${API_URL}/goals/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${user.token}`,
+          'Content-Type': 'application/json'
+        }
       });
-      console.log('Updated goals:', updatedGoals);
-      setGoals(updatedGoals);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedGoals));
+
+      if (!response.ok) {
+        throw new Error('Failed to update goal');
+      }
+
+      const updatedGoal = await response.json();
+      setGoals(goals.map(goal => 
+        goal._id === id ? updatedGoal : goal
+      ));
       setError(null);
     } catch (err) {
       setError('Failed to update goal. Please try again.');
@@ -125,19 +140,25 @@ const ThingsStyleApp = ({ user }) => {
                 {isAdding && (
                   <div className="p-2">
                     <QuickGoalInput
-                      onSave={(goalData) => {
+                      onSave={async (goalData) => {
                         try {
-                          const newGoal = {
-                            id: Date.now().toString(),
-                            text: goalData.text,
-                            completed: false,
-                            createdAt: new Date().toISOString()
-                          };
-                          
-                          console.log('Adding new goal:', newGoal);
-                          const updatedGoals = [...goals, newGoal];
-                          setGoals(updatedGoals);
-                          localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedGoals));
+                          const response = await fetch(`${API_URL}/goals`, {
+                            method: 'POST',
+                            headers: {
+                              'Authorization': `Bearer ${user.token}`,
+                              'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                              text: goalData.text
+                            })
+                          });
+
+                          if (!response.ok) {
+                            throw new Error('Failed to create goal');
+                          }
+
+                          const newGoal = await response.json();
+                          setGoals([...goals, newGoal]);
                           setIsAdding(false);
                         } catch (err) {
                           setError('Failed to save goal. Please try again.');

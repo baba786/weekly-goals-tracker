@@ -1,60 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import './styles/animations.css';
 import { X } from 'lucide-react';
 import ThingsStyleApp from './components/ThingsStyleApp';
 import Header from './components/Header';
 import AuthModal from './components/AuthModal';
 import LandingPage from './components/LandingPage';
+import { useAuth } from './context/AuthContext';
 
 function App() {
-  const [user, setUser] = useState(null);
+  const { user, logout } = useAuth();
   const [showAuth, setShowAuth] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
-  const [view, setView] = useState('landing'); // 'landing', 'goals'
-  const [error, setError] = useState(null);
-
-  // Check if user was previously logged in and listen for auth modal trigger
-  useEffect(() => {
-    const savedUser = localStorage.getItem('weekly_goals_auth');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-      setView('goals');
-    }
-  }, []);
-
-  const handleAuth = async (formData) => {
-    try {
-      // Create user data
-      const userData = {
-        id: Math.random().toString(36).substr(2, 9),
-        email: formData.email,
-        name: formData.name || formData.email.split('@')[0],
-        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.name || formData.email.split('@')[0])}&background=random`,
-      };
-
-      // Save to localStorage
-      localStorage.setItem('weekly_goals_auth', JSON.stringify(userData));
-      
-      // Update state
-      setUser(userData);
-      setShowAuth(false);
-      setView('goals');
-
-      // Show welcome message (optional)
-      const welcomeMessage = document.createElement('div');
-      welcomeMessage.className = 'fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded z-50';
-      welcomeMessage.textContent = `Welcome, ${userData.name}!`;
-      document.body.appendChild(welcomeMessage);
-      setTimeout(() => welcomeMessage.remove(), 3000);
-    } catch (error) {
-      console.error('Authentication failed:', error);
-      setError('Authentication failed. Please try again.');
-    }
-  };
+  const [view, setView] = useState(() => user ? 'goals' : 'landing');
 
   const handleLogout = () => {
-    localStorage.removeItem('weekly_goals_auth');
-    setUser(null);
+    logout();
     setView('landing');
   };
 
