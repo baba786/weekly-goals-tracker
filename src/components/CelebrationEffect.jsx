@@ -18,7 +18,7 @@ const CelebrationEffect = ({ onComplete }) => {
     // Create confetti instance
     const myConfetti = confetti.create(myCanvas, {
       resize: true,
-      useWorker: true
+      useWorker: true,
     });
 
     // Enhanced confetti settings
@@ -33,7 +33,7 @@ const CelebrationEffect = ({ onComplete }) => {
       gravity: 1.2,
       drift: 0,
       shapes: ['circle', 'square'],
-      colors: ['#26ccff', '#a25afd', '#ff5e7e', '#88ff5a', '#fcff42', '#ffa62d', '#ff36ff']
+      colors: ['#26ccff', '#a25afd', '#ff5e7e', '#88ff5a', '#fcff42', '#ffa62d', '#ff36ff'],
     };
 
     const randomInRange = (min, max) => Math.random() * (max - min) + min;
@@ -54,14 +54,14 @@ const CelebrationEffect = ({ onComplete }) => {
       myConfetti({
         ...defaults,
         particleCount,
-        origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
+        origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
       });
 
       // Right side confetti
       myConfetti({
         ...defaults,
         particleCount,
-        origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
+        origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
       });
 
       // Center burst occasionally
@@ -69,7 +69,7 @@ const CelebrationEffect = ({ onComplete }) => {
         myConfetti({
           ...defaults,
           particleCount: particleCount * 1.5,
-          origin: { x: 0.5, y: 0.5 }
+          origin: { x: 0.5, y: 0.5 },
         });
       }
     }, 200);
@@ -85,9 +85,7 @@ const CelebrationEffect = ({ onComplete }) => {
   return (
     <div className="fixed inset-0 pointer-events-none flex items-center justify-center z-[1000]">
       <div className="bg-white/90 backdrop-blur-sm px-6 py-3 rounded-xl shadow-lg animate-celebration">
-        <p className="text-xl font-bold text-gray-800">
-          🎉 Goal achieved!
-        </p>
+        <p className="text-xl font-bold text-gray-800">🎉 Goal achieved!</p>
       </div>
     </div>
   );

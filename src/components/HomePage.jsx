@@ -13,7 +13,8 @@ const HomePage = ({ onGetStarted }) => {
               <span className="block text-blue-600">Really Matters</span>
             </h1>
             <p className="mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
-              Set meaningful weekly goals, track your progress, and achieve more with a beautifully simple interface designed for focus and productivity.
+              Set meaningful weekly goals, track your progress, and achieve more with a beautifully
+              simple interface designed for focus and productivity.
             </p>
             <div className="mt-5 max-w-md mx-auto sm:flex sm:justify-center md:mt-8">
               <div className="rounded-md shadow">
@@ -54,9 +55,12 @@ const HomePage = ({ onGetStarted }) => {
                         <Target className="h-6 w-6 text-white" />
                       </span>
                     </div>
-                    <h3 className="mt-8 text-lg font-medium text-gray-900 tracking-tight">Weekly Focus</h3>
+                    <h3 className="mt-8 text-lg font-medium text-gray-900 tracking-tight">
+                      Weekly Focus
+                    </h3>
                     <p className="mt-5 text-base text-gray-500">
-                      Set up to 5 key goals each week to maintain clarity and focus on what truly matters.
+                      Set up to 5 key goals each week to maintain clarity and focus on what truly
+                      matters.
                     </p>
                   </div>
                 </div>
@@ -71,9 +75,12 @@ const HomePage = ({ onGetStarted }) => {
                         <Zap className="h-6 w-6 text-white" />
                       </span>
                     </div>
-                    <h3 className="mt-8 text-lg font-medium text-gray-900 tracking-tight">Stay Motivated</h3>
+                    <h3 className="mt-8 text-lg font-medium text-gray-900 tracking-tight">
+                      Stay Motivated
+                    </h3>
                     <p className="mt-5 text-base text-gray-500">
-                      Track your progress and celebrate achievements with visual progress indicators.
+                      Track your progress and celebrate achievements with visual progress
+                      indicators.
                     </p>
                   </div>
                 </div>
@@ -88,7 +95,9 @@ const HomePage = ({ onGetStarted }) => {
                         <Brain className="h-6 w-6 text-white" />
                       </span>
                     </div>
-                    <h3 className="mt-8 text-lg font-medium text-gray-900 tracking-tight">Build Habits</h3>
+                    <h3 className="mt-8 text-lg font-medium text-gray-900 tracking-tight">
+                      Build Habits
+                    </h3>
                     <p className="mt-5 text-base text-gray-500">
                       Develop consistent habits by focusing on weekly achievements and progress.
                     </p>
@@ -142,7 +151,9 @@ const HomePage = ({ onGetStarted }) => {
                     <div className="space-y-3">
                       <div className="flex items-center p-3 bg-gray-50 rounded-lg">
                         <CheckCircle2 className="h-5 w-5 text-blue-500 mr-3" />
-                        <span className="text-gray-400 line-through">Complete project presentation</span>
+                        <span className="text-gray-400 line-through">
+                          Complete project presentation
+                        </span>
                       </div>
                       <div className="flex items-center p-3 bg-gray-50 rounded-lg">
                         <CheckCircle2 className="h-5 w-5 text-blue-500 mr-3" />

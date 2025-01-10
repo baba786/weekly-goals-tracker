@@ -4,7 +4,7 @@ import { X, Calendar, Tag, Clock, Sparkles, Target, AlertCircle } from 'lucide-r
 const PRIORITIES = [
   { id: 'high', label: 'High', color: 'bg-red-100 text-red-700 ring-red-600' },
   { id: 'medium', label: 'Medium', color: 'bg-yellow-100 text-yellow-700 ring-yellow-600' },
-  { id: 'low', label: 'Low', color: 'bg-blue-100 text-blue-700 ring-blue-600' }
+  { id: 'low', label: 'Low', color: 'bg-blue-100 text-blue-700 ring-blue-600' },
 ];
 
 const CATEGORIES = [
@@ -12,7 +12,7 @@ const CATEGORIES = [
   { id: 'personal', label: 'Personal', icon: '🎯', color: 'bg-green-100 text-green-700' },
   { id: 'health', label: 'Health', icon: '💪', color: 'bg-red-100 text-red-700' },
   { id: 'learning', label: 'Learning', icon: '📚', color: 'bg-purple-100 text-purple-700' },
-  { id: 'creative', label: 'Creative', icon: '🎨', color: 'bg-pink-100 text-pink-700' }
+  { id: 'creative', label: 'Creative', icon: '🎨', color: 'bg-pink-100 text-pink-700' },
 ];
 
 const GoalEditor = ({ goal, onSave, onClose }) => {
@@ -22,7 +22,7 @@ const GoalEditor = ({ goal, onSave, onClose }) => {
     priority: 'medium',
     dueDate: '',
     notes: '',
-    steps: []
+    steps: [],
   });
   const [newStep, setNewStep] = useState('');
   const [aiSuggestion, setAiSuggestion] = useState('');
@@ -36,7 +36,7 @@ const GoalEditor = ({ goal, onSave, onClose }) => {
         priority: goal.priority || 'medium',
         dueDate: goal.dueDate || '',
         notes: goal.notes || '',
-        steps: goal.steps || []
+        steps: goal.steps || [],
       });
     }
     if (textareaRef.current) {
@@ -46,7 +46,7 @@ const GoalEditor = ({ goal, onSave, onClose }) => {
     }
   }, [goal]);
 
-  const handleTextChange = (e) => {
+  const handleTextChange = e => {
     const textarea = e.target;
     textarea.style.height = 'auto';
     textarea.style.height = textarea.scrollHeight + 'px';
@@ -56,10 +56,10 @@ const GoalEditor = ({ goal, onSave, onClose }) => {
     if (e.target.value.length > 10) {
       setTimeout(() => {
         const suggestions = [
-          "Consider breaking this into smaller steps",
-          "Add a specific deadline to stay on track",
-          "Make this goal more measurable",
-          "Add some success criteria"
+          'Consider breaking this into smaller steps',
+          'Add a specific deadline to stay on track',
+          'Make this goal more measurable',
+          'Add some success criteria',
         ];
         setAiSuggestion(suggestions[Math.floor(Math.random() * suggestions.length)]);
       }, 500);
@@ -72,20 +72,20 @@ const GoalEditor = ({ goal, onSave, onClose }) => {
     if (newStep.trim()) {
       setFormData({
         ...formData,
-        steps: [...formData.steps, { id: Date.now(), text: newStep.trim(), completed: false }]
+        steps: [...formData.steps, { id: Date.now(), text: newStep.trim(), completed: false }],
       });
       setNewStep('');
     }
   };
 
-  const removeStep = (stepId) => {
+  const removeStep = stepId => {
     setFormData({
       ...formData,
-      steps: formData.steps.filter(step => step.id !== stepId)
+      steps: formData.steps.filter(step => step.id !== stepId),
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = e => {
     e.preventDefault();
     if (!formData.text.trim()) return;
     onSave(formData);
@@ -116,7 +116,7 @@ const GoalEditor = ({ goal, onSave, onClose }) => {
                   className="block w-full resize-none rounded-md border-0 py-3 text-lg text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600"
                   rows={1}
                 />
-                
+
                 {aiSuggestion && (
                   <div className="mt-2 flex items-center text-sm text-gray-500">
                     <Sparkles size={16} className="mr-1 text-blue-500" />
@@ -127,9 +127,7 @@ const GoalEditor = ({ goal, onSave, onClose }) => {
 
               {/* Categories */}
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Category
-                </label>
+                <label className="block text-sm font-medium text-gray-700">Category</label>
                 <div className="flex flex-wrap gap-2">
                   {CATEGORIES.map(category => (
                     <button
@@ -137,7 +135,7 @@ const GoalEditor = ({ goal, onSave, onClose }) => {
                       type="button"
                       onClick={() => setFormData({ ...formData, category: category.id })}
                       className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
-                        formData.category === category.id 
+                        formData.category === category.id
                           ? category.color + ' ring-2 ring-offset-2'
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
@@ -152,9 +150,7 @@ const GoalEditor = ({ goal, onSave, onClose }) => {
               {/* Priority & Due Date */}
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Priority
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700">Priority</label>
                   <div className="flex gap-2">
                     {PRIORITIES.map(priority => (
                       <button
@@ -174,9 +170,7 @@ const GoalEditor = ({ goal, onSave, onClose }) => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Due Date
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700">Due Date</label>
                   <div className="relative">
                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                       <Calendar size={16} className="text-gray-400" />
@@ -184,7 +178,7 @@ const GoalEditor = ({ goal, onSave, onClose }) => {
                     <input
                       type="date"
                       value={formData.dueDate}
-                      onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                      onChange={e => setFormData({ ...formData, dueDate: e.target.value })}
                       className="block w-full rounded-md border-0 py-1.5 pl-10 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
                     />
                   </div>
@@ -193,9 +187,7 @@ const GoalEditor = ({ goal, onSave, onClose }) => {
 
               {/* Steps */}
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Steps
-                </label>
+                <label className="block text-sm font-medium text-gray-700">Steps</label>
                 <div className="space-y-2">
                   {formData.steps.map((step, index) => (
                     <div key={step.id} className="flex items-center gap-2">
@@ -203,7 +195,7 @@ const GoalEditor = ({ goal, onSave, onClose }) => {
                       <input
                         type="text"
                         value={step.text}
-                        onChange={(e) => {
+                        onChange={e => {
                           const newSteps = [...formData.steps];
                           newSteps[index].text = e.target.value;
                           setFormData({ ...formData, steps: newSteps });
@@ -223,8 +215,8 @@ const GoalEditor = ({ goal, onSave, onClose }) => {
                     <input
                       type="text"
                       value={newStep}
-                      onChange={(e) => setNewStep(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && addStep()}
+                      onChange={e => setNewStep(e.target.value)}
+                      onKeyPress={e => e.key === 'Enter' && addStep()}
                       placeholder="Add a step..."
                       className="flex-1 rounded-md border-0 py-1.5 text-sm text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600"
                     />
@@ -241,12 +233,10 @@ const GoalEditor = ({ goal, onSave, onClose }) => {
 
               {/* Notes */}
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Notes
-                </label>
+                <label className="block text-sm font-medium text-gray-700">Notes</label>
                 <textarea
                   value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  onChange={e => setFormData({ ...formData, notes: e.target.value })}
                   placeholder="Add any additional notes..."
                   rows={3}
                   className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"

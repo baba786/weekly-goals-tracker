@@ -11,10 +11,10 @@ function App() {
   const { user, logout, login, register } = useAuth();
   const [showAuth, setShowAuth] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
-  const [view, setView] = useState(() => user ? 'goals' : 'landing');
+  const [view, setView] = useState(() => (user ? 'goals' : 'landing'));
   const [error, setError] = useState(null);
 
-  const handleAuth = async (formData) => {
+  const handleAuth = async formData => {
     try {
       if (formData.name) {
         // Register
@@ -38,7 +38,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header 
+      <Header
         user={user}
         onLogout={handleLogout}
         onShowAuth={() => setShowAuth(true)}
@@ -52,7 +52,9 @@ function App() {
         }}
       />
 
-      <main className="pt-16"> {/* Add padding-top to account for fixed header */}
+      <main className="pt-16">
+        {' '}
+        {/* Add padding-top to account for fixed header */}
         {view === 'goals' && user ? (
           <ThingsStyleApp />
         ) : (
@@ -60,12 +62,7 @@ function App() {
         )}
       </main>
 
-      {showAuth && (
-        <AuthModal
-          onClose={() => setShowAuth(false)}
-          onAuth={handleAuth}
-        />
-      )}
+      {showAuth && <AuthModal onClose={() => setShowAuth(false)} onAuth={handleAuth} />}
 
       {showHelp && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-50">

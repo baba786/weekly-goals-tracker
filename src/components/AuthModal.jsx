@@ -21,10 +21,10 @@ const AuthModal = ({ onClose, onAuth }) => {
     name: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
   });
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
     setError('');
 
@@ -56,14 +56,22 @@ const AuthModal = ({ onClose, onAuth }) => {
     }
   };
 
-  const handleChange = (e) => {
+  const handleChange = e => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div
+      className="fixed inset-0 z-50 overflow-y-auto"
+      aria-labelledby="modal-title"
+      role="dialog"
+      aria-modal="true"
+    >
       <div className="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        <div
+          className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+          aria-hidden="true"
+        ></div>
 
         <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-md">
           <div className="absolute right-0 top-0 hidden pr-4 pt-4 sm:block">
@@ -92,7 +100,9 @@ const AuthModal = ({ onClose, onAuth }) => {
                 <form onSubmit={handleSubmit} className="space-y-4">
                   {isSignUp && (
                     <div>
-                      <label htmlFor="name" className="sr-only">Name</label>
+                      <label htmlFor="name" className="sr-only">
+                        Name
+                      </label>
                       <div className="relative">
                         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                           <User className="h-5 w-5 text-gray-400" />
@@ -111,7 +121,9 @@ const AuthModal = ({ onClose, onAuth }) => {
                   )}
 
                   <div>
-                    <label htmlFor="email" className="sr-only">Email</label>
+                    <label htmlFor="email" className="sr-only">
+                      Email
+                    </label>
                     <div className="relative">
                       <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                         <Mail className="h-5 w-5 text-gray-400" />
@@ -129,7 +141,9 @@ const AuthModal = ({ onClose, onAuth }) => {
                   </div>
 
                   <div>
-                    <label htmlFor="password" className="sr-only">Password</label>
+                    <label htmlFor="password" className="sr-only">
+                      Password
+                    </label>
                     <div className="relative">
                       <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                         <Lock className="h-5 w-5 text-gray-400" />
@@ -148,7 +162,9 @@ const AuthModal = ({ onClose, onAuth }) => {
 
                   {isSignUp && (
                     <div>
-                      <label htmlFor="confirmPassword" className="sr-only">Confirm Password</label>
+                      <label htmlFor="confirmPassword" className="sr-only">
+                        Confirm Password
+                      </label>
                       <div className="relative">
                         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                           <Lock className="h-5 w-5 text-gray-400" />

@@ -30,8 +30,8 @@ const ThingsStyleApp = () => {
         setIsLoading(true);
         const response = await fetch(`${API_URL}/goals/current`, {
           headers: {
-            'Authorization': `Bearer ${user.token}`
-          }
+            Authorization: `Bearer ${user.token}`,
+          },
         });
 
         if (!response.ok) {
@@ -51,14 +51,14 @@ const ThingsStyleApp = () => {
     fetchGoals();
   }, [user.token]);
 
-  const toggleGoal = async (id) => {
+  const toggleGoal = async id => {
     try {
       const response = await fetch(`${API_URL}/goals/${id}`, {
         method: 'PATCH',
         headers: {
-          'Authorization': `Bearer ${user.token}`,
-          'Content-Type': 'application/json'
-        }
+          Authorization: `Bearer ${user.token}`,
+          'Content-Type': 'application/json',
+        },
       });
 
       if (!response.ok) {
@@ -66,9 +66,7 @@ const ThingsStyleApp = () => {
       }
 
       const updatedGoal = await response.json();
-      setGoals(goals.map(goal => 
-        goal._id === id ? updatedGoal : goal
-      ));
+      setGoals(goals.map(goal => (goal._id === id ? updatedGoal : goal)));
       setError(null);
     } catch (err) {
       setError('Failed to update goal. Please try again.');
@@ -89,15 +87,15 @@ const ThingsStyleApp = () => {
               </span>
             )}
           </div>
-          
+
           {/* Weekly Progress Bar */}
           {goals.length > 0 && (
             <div className="mt-4 bg-gray-100 rounded-full h-1.5 overflow-hidden">
-              <div 
+              <div
                 className="bg-blue-500 h-full transition-all duration-500 ease-out"
-                style={{ 
+                style={{
                   width: `${(goals.filter(g => g.completed).length / goals.length) * 100}%`,
-                  transition: 'width 0.5s ease-out'
+                  transition: 'width 0.5s ease-out',
                 }}
               />
             </div>
@@ -109,7 +107,7 @@ const ThingsStyleApp = () => {
           <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 shadow-sm animate-fade-in">
             <div className="flex items-center">
               <span className="font-medium">{error}</span>
-              <button 
+              <button
                 onClick={() => setError(null)}
                 className="ml-auto text-red-500 hover:text-red-700"
               >
@@ -127,30 +125,32 @@ const ThingsStyleApp = () => {
             <>
               {/* Active Goals */}
               <div className="space-y-2 p-2">
-                {goals.filter(g => !g.completed).map((goal) => (
-                  <GoalItem
-                    key={goal._id || goal.id}
-                    goal={goal}
-                    onToggle={toggleGoal}
-                    onEdit={() => setEditingGoal(goal)}
-                  />
-                ))}
+                {goals
+                  .filter(g => !g.completed)
+                  .map(goal => (
+                    <GoalItem
+                      key={goal._id || goal.id}
+                      goal={goal}
+                      onToggle={toggleGoal}
+                      onEdit={() => setEditingGoal(goal)}
+                    />
+                  ))}
 
                 {/* Add Goal Input */}
                 {isAdding && (
                   <div className="p-2">
                     <QuickGoalInput
-                      onSave={async (goalData) => {
+                      onSave={async goalData => {
                         try {
                           const response = await fetch(`${API_URL}/goals`, {
                             method: 'POST',
                             headers: {
-                              'Authorization': `Bearer ${user.token}`,
-                              'Content-Type': 'application/json'
+                              Authorization: `Bearer ${user.token}`,
+                              'Content-Type': 'application/json',
                             },
                             body: JSON.stringify({
-                              text: goalData.text
-                            })
+                              text: goalData.text,
+                            }),
                           });
 
                           if (!response.ok) {
@@ -191,10 +191,13 @@ const ThingsStyleApp = () => {
                       onClick={() => {
                         const completedGoals = goals.filter(g => g.completed);
                         // Archive completed goals
-                        localStorage.setItem('archived_goals', JSON.stringify([
-                          ...JSON.parse(localStorage.getItem('archived_goals') || '[]'),
-                          ...completedGoals
-                        ]));
+                        localStorage.setItem(
+                          'archived_goals',
+                          JSON.stringify([
+                            ...JSON.parse(localStorage.getItem('archived_goals') || '[]'),
+                            ...completedGoals,
+                          ])
+                        );
                         // Remove completed goals from current list
                         const activeGoals = goals.filter(g => !g.completed);
                         setGoals(activeGoals);
@@ -206,14 +209,16 @@ const ThingsStyleApp = () => {
                     </button>
                   </div>
                   <div className="space-y-1 opacity-60">
-                    {goals.filter(g => g.completed).map((goal) => (
-                      <GoalItem
-                        key={goal._id || goal.id}
-                        goal={goal}
-                        onToggle={toggleGoal}
-                        onEdit={() => setEditingGoal(goal)}
-                      />
-                    ))}
+                    {goals
+                      .filter(g => g.completed)
+                      .map(goal => (
+                        <GoalItem
+                          key={goal._id || goal.id}
+                          goal={goal}
+                          onToggle={toggleGoal}
+                          onEdit={() => setEditingGoal(goal)}
+                        />
+                      ))}
                   </div>
                 </div>
               )}
@@ -234,7 +239,7 @@ const ThingsStyleApp = () => {
                   What are the most important things you want to achieve this week?
                 </p>
               </div>
-              
+
               <button
                 onClick={() => setIsAdding(true)}
                 className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -259,7 +264,7 @@ const ThingsStyleApp = () => {
         {editingGoal && (
           <SimpleGoalEditor
             goal={editingGoal}
-            onSave={(updatedGoal) => {
+            onSave={updatedGoal => {
               const updatedGoals = goals.map(g =>
                 (g._id || g.id) === (updatedGoal._id || updatedGoal.id) ? updatedGoal : g
               );

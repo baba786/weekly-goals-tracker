@@ -7,7 +7,7 @@ const QuickGoalInput = ({ onSave, onCancel }) => {
   const [category, setCategory] = useState('');
   const [dueDate, setDueDate] = useState('');
   const inputRef = useRef(null);
-  
+
   // Categories with emojis for visual appeal
   const categories = [
     { id: 'work', icon: '💼', label: 'Work' },
@@ -23,19 +23,19 @@ const QuickGoalInput = ({ onSave, onCancel }) => {
     }
   }, []);
 
-  const handleTextChange = (e) => {
+  const handleTextChange = e => {
     const textarea = e.target;
     setText(e.target.value);
     textarea.style.height = 'auto';
     textarea.style.height = textarea.scrollHeight + 'px';
-    
+
     // Show actions only when user starts typing
     if (e.target.value.trim() && !showActions) {
       setShowActions(true);
     }
   };
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = e => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       if (text.trim()) {
@@ -48,14 +48,14 @@ const QuickGoalInput = ({ onSave, onCancel }) => {
 
   const handleSave = () => {
     if (!text.trim()) return;
-    
+
     try {
       onSave({
         text: text.trim(),
         category: category || 'work', // default category if none selected
         dueDate: dueDate || null,
       });
-      
+
       // Clear the form
       setText('');
       setCategory('');
@@ -89,8 +89,8 @@ const QuickGoalInput = ({ onSave, onCancel }) => {
                 key={cat.id}
                 onClick={() => setCategory(cat.id)}
                 className={`p-1.5 rounded-md text-sm ${
-                  category === cat.id 
-                    ? 'bg-blue-50 text-blue-600' 
+                  category === cat.id
+                    ? 'bg-blue-50 text-blue-600'
                     : 'text-gray-600 hover:bg-gray-50'
                 }`}
               >
@@ -104,7 +104,7 @@ const QuickGoalInput = ({ onSave, onCancel }) => {
             <input
               type="date"
               value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
+              onChange={e => setDueDate(e.target.value)}
               className="p-1.5 rounded-md text-sm text-gray-600 border border-gray-200 focus:outline-none focus:border-blue-300"
             />
             <button
