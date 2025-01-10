@@ -28,48 +28,74 @@ app.use(cors());
 app.use(express.json());
 app.use(limiter);
 
-// Configure mongoose for better performance and reliability
-mongoose.set('bufferCommands', false);
+// Configure mongoose
+mongoose.set('strictQuery', true);
 
-// Connect to MongoDB with optimized settings
+// Initialize MongoDB connection
+let isConnected = false;
 const connectDB = async () => {
+  if (isConnected) return;
+
   try {
     const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/weekly-goals', {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       retryWrites: true,
-      serverSelectionTimeoutMS: 30000, // Increased from 5000
+      serverSelectionTimeoutMS: 30000,
       socketTimeoutMS: 45000,
-      connectTimeoutMS: 30000, // Increased from 10000
+      connectTimeoutMS: 30000,
       maxPoolSize: 10,
       minPoolSize: 2,
       maxIdleTimeMS: 30000,
       waitQueueTimeoutMS: 10000,
     });
     
+    isConnected = true;
+    console.log(`MongoDB Connected: ${conn.connection.host}`);
+
     // Add connection error handlers
     mongoose.connection.on('error', err => {
       console.error('MongoDB connection error:', err);
+      isConnected = false;
     });
 
     mongoose.connection.on('disconnected', () => {
       console.log('MongoDB disconnected. Attempting to reconnect...');
+      isConnected = false;
       setTimeout(connectDB, 5000);
     });
 
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
     console.error(`Error: ${error.message}`);
+    isConnected = false;
     // Retry connection after delay
     setTimeout(connectDB, 5000);
+    throw error; // Propagate the error
   }
 };
 
-connectDB();
+// Middleware to ensure database connection
+const ensureDbConnected = async (req, res, next) => {
+  try {
+    if (!isConnected) {
+      await connectDB();
+    }
+    next();
+  } catch (error) {
+    console.error('Database connection error:', error);
+    res.status(503).json({ 
+      message: 'Database connection error. Please try again later.',
+      error: 'db_connection'
+    });
+  }
+};
 
-// API routes
-app.use('/api/auth', authRouter);
-app.use('/api/goals', goalsRouter);
+// Initialize database connection
+connectDB().catch(console.error);
+
+// API routes with database connection check
+app.use('/api/auth', ensureDbConnected, authRouter);
+app.use('/api/goals', ensureDbConnected, goalsRouter);
 
 // Serve static files from the dist directory
 app.use(express.static(join(__dirname, 'dist')));
