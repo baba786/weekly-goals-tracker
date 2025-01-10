@@ -1,6 +1,11 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
+// Enable mongoose debugging in development
+if (process.env.NODE_ENV !== 'production') {
+  mongoose.set('debug', true);
+}
+
 const userSchema = new mongoose.Schema({
   name: {
     type: String,

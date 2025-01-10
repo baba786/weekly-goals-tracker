@@ -20,61 +20,74 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ message: 'Please provide a valid email address' });
     }
 
-    // Check if user exists with timeout
-    const userExists = await Promise.race([
-      User.findOne({ email }).maxTimeMS(10000),
-      new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Database operation timeout')), 10000)
-      )
-    ]);
+    // Password validation
+    if (password.length < 8) {
+      return res.status(400).json({ message: 'Password must be at least 8 characters long' });
+    }
+
+    // Name validation
+    if (name.length < 2) {
+      return res.status(400).json({ message: 'Name must be at least 2 characters long' });
+    }
+
+    // Check database connection
+    if (!mongoose.connection.readyState) {
+      return res.status(503).json({ 
+        message: 'Service temporarily unavailable. Please try again later.',
+        error: 'db_connection'
+      });
+    }
+
+    // Check if user exists
+    let userExists;
+    try {
+      userExists = await User.findOne({ email }).maxTimeMS(5000).exec();
+    } catch (error) {
+      console.error('Error checking existing user:', error);
+      return res.status(503).json({ 
+        message: 'Error checking user existence. Please try again.',
+        error: 'db_query'
+      });
+    }
 
     if (userExists) {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    // Create user with timeout
-    const user = await Promise.race([
-      User.create({
-        name,
-        email,
-        password
-      }),
-      new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Database operation timeout')), 15000)
-      )
-    ]);
-
-    if (user) {
-      // Generate token and send response
-      const token = generateToken(user._id);
-      res.status(201).json({
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        token
+    // Create new user
+    let user;
+    try {
+      user = new User({ name, email, password });
+      await user.save({ maxTimeMS: 10000 });
+    } catch (error) {
+      console.error('Error creating user:', error);
+      if (error.code === 11000) {
+        return res.status(400).json({ 
+          message: 'User already exists',
+          error: 'duplicate'
+        });
+      }
+      return res.status(503).json({ 
+        message: 'Error creating user. Please try again.',
+        error: 'db_save'
       });
-    } else {
-      throw new Error('Failed to create user');
     }
+
+    // Generate token and send response
+    const token = generateToken(user._id);
+    res.status(201).json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      token
+    });
+
   } catch (error) {
     console.error('Registration error:', error);
-    
-    if (error.message === 'Database operation timeout') {
-      res.status(504).json({ 
-        message: 'Registration request timed out. Please try again.',
-        error: 'timeout'
-      });
-    } else if (error.code === 11000) {
-      res.status(400).json({ 
-        message: 'User already exists',
-        error: 'duplicate'
-      });
-    } else {
-      res.status(400).json({ 
-        message: error.message,
-        error: 'unknown'
-      });
-    }
+    res.status(500).json({ 
+      message: 'Internal server error. Please try again later.',
+      error: 'server_error'
+    });
   }
 });
 
@@ -83,34 +96,72 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email }).maxTimeMS(5000);
+    // Input validation
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Please provide email and password' });
+    }
+
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ message: 'Please provide a valid email address' });
+    }
+
+    // Check database connection
+    if (!mongoose.connection.readyState) {
+      return res.status(503).json({ 
+        message: 'Service temporarily unavailable. Please try again later.',
+        error: 'db_connection'
+      });
+    }
+
+    // Find user
+    let user;
+    try {
+      user = await User.findOne({ email }).maxTimeMS(5000).exec();
+    } catch (error) {
+      console.error('Error finding user:', error);
+      return res.status(503).json({ 
+        message: 'Error during login. Please try again.',
+        error: 'db_query'
+      });
+    }
+
     if (!user) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
-    const isMatch = await Promise.race([
-      user.matchPassword(password),
-      new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Password verification timeout')), 5000)
-      )
-    ]);
-
-    if (isMatch) {
-      res.json({
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        token: generateToken(user._id)
+    // Verify password
+    let isMatch;
+    try {
+      isMatch = await user.matchPassword(password);
+    } catch (error) {
+      console.error('Error verifying password:', error);
+      return res.status(503).json({ 
+        message: 'Error verifying credentials. Please try again.',
+        error: 'password_verify'
       });
-    } else {
-      res.status(401).json({ message: 'Invalid email or password' });
     }
+
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
+
+    // Generate token and send response
+    const token = generateToken(user._id);
+    res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      token
+    });
+
   } catch (error) {
-    if (error.message === 'Password verification timeout') {
-      res.status(504).json({ message: 'Login request timed out. Please try again.' });
-    } else {
-      res.status(400).json({ message: error.message });
-    }
+    console.error('Login error:', error);
+    res.status(500).json({ 
+      message: 'Internal server error. Please try again later.',
+      error: 'server_error'
+    });
   }
 });
 
