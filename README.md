@@ -8,6 +8,7 @@ A minimal and elegant goals tracking application inspired by Things app design p
 - 🎯 Set up to 5 weekly goals
 - 🌟 Beautiful animations and transitions
 - 💾 Persistent storage using MongoDB
+- 🔐 Secure user authentication
 - ⌨️ Keyboard shortcuts for quick goal management
 - 📱 Fully responsive design
 - 🎉 Celebration animations on goal completion
@@ -28,8 +29,9 @@ cd weekly-goals-tracker
 # Install dependencies
 npm install
 
-# Create .env file and add your MongoDB URI
+# Create .env file and add required environment variables
 MONGODB_URI=your_mongodb_uri_here
+JWT_SECRET=your_jwt_secret_here
 PORT=3000
 VITE_API_URL=/api
 
