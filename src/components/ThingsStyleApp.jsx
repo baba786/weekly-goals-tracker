@@ -14,7 +14,7 @@ const LoadingSpinner = () => (
   </div>
 );
 
-const ThingsStyleApp = ({ user }) => {
+const ThingsStyleApp = () => {
   const [goals, setGoals] = useState([]);
   const [isAdding, setIsAdding] = useState(false);
   const [isLoading, setIsLoading] = useState(true);

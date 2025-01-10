@@ -36,7 +36,7 @@ function App() {
 
       <main className="pt-16"> {/* Add padding-top to account for fixed header */}
         {view === 'goals' && user ? (
-          <ThingsStyleApp user={user} />
+          <ThingsStyleApp />
         ) : (
           <LandingPage onGetStarted={() => setShowAuth(true)} />
         )}
