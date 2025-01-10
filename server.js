@@ -15,167 +15,120 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 3001;
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
-});
-
-// Middleware
-app.use(cors({
-  origin: true,
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
-app.use(express.json());
-app.use(limiter);
-
-// Configure mongoose
+// Configure mongoose first
 mongoose.set('strictQuery', true);
-
-// Add test endpoints for debugging
-app.get('/api/test', (req, res) => {
-  res.json({ 
-    message: 'API is working',
-    timestamp: new Date().toISOString()
-  });
-});
-
-app.get('/api/test-db', async (req, res) => {
-  try {
-    const state = mongoose.connection.readyState;
-    res.json({ 
-      dbState: state,
-      stateMessage: ['disconnected', 'connected', 'connecting', 'disconnecting'][state],
-      timestamp: new Date().toISOString(),
-      mongodbUri: process.env.MONGODB_URI ? 'URI is set' : 'URI is missing'
-    });
-  } catch (error) {
-    console.error('Test DB endpoint error:', error);
-    res.status(500).json({ 
-      error: error.message,
-      timestamp: new Date().toISOString()
-    });
-  }
-});
 
 // Initialize MongoDB connection
 const connectDB = async () => {
   try {
-    if (!process.env.MONGODB_URI) {
-      throw new Error('MongoDB URI is not defined in environment variables');
+    if (mongoose.connection.readyState !== 0) {
+      return; // Already connected or connecting
     }
-    console.log('MongoDB URI check passed, attempting connection...');
+
+    if (!process.env.MONGODB_URI) {
+      throw new Error('MONGODB_URI is not defined');
+    }
 
     const options = {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       bufferCommands: false,
       maxPoolSize: 1,
-      serverSelectionTimeoutMS: 10000,
-      socketTimeoutMS: 20000,
-      connectTimeoutMS: 15000,
-      retryWrites: true,
-      w: 'majority',
-      family: 4 // Force IPv4
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 10000,
+      connectTimeoutMS: 10000,
+      family: 4
     };
 
-    const conn = await mongoose.connect(process.env.MONGODB_URI, options);
-    console.log(`MongoDB Connected Successfully to: ${conn.connection.host}`);
-    
-    mongoose.connection.on('error', err => {
-      console.error('MongoDB connection error:', err);
-    });
-
-    mongoose.connection.on('disconnected', () => {
-      console.log('MongoDB disconnected');
-    });
-
-    return conn;
+    await mongoose.connect(process.env.MONGODB_URI, options);
+    console.log('MongoDB connected');
   } catch (error) {
-    console.error('Detailed MongoDB connection error:', {
-      message: error.message,
-      code: error.code,
-      name: error.name,
-      stack: error.stack
-    });
+    console.error('MongoDB connection error:', error);
     throw error;
   }
 };
 
-// Middleware to check database connection
-const checkDbConnection = async (req, res, next) => {
-  try {
-    if (mongoose.connection.readyState !== 1) {
-      console.log('Attempting to connect to MongoDB...');
-      await connectDB();
-      console.log('Successfully connected to MongoDB');
+// Middleware
+app.use(cors({
+  origin: true,
+  credentials: true
+}));
+app.use(express.json());
+app.use(rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100
+}));
+
+// Test routes first
+app.get('/api/test', (req, res) => {
+  res.json({ 
+    message: 'API is working',
+    env: {
+      nodeEnv: process.env.NODE_ENV,
+      hasMongoUri: !!process.env.MONGODB_URI,
+      hasJwtSecret: !!process.env.JWT_SECRET
     }
-    next();
-  } catch (error) {
-    console.error('Detailed DB connection error:', {
-      error: error.message,
-      code: error.code,
-      name: error.name,
-      stack: error.stack
-    });
-    return res.status(503).json({
-      message: 'Database connection not available. Please try again later.',
-      error: process.env.NODE_ENV === 'development' ? error.message : 'db_connection'
-    });
-  }
-};
-
-// Serve static files from the dist directory
-app.use(express.static(join(__dirname, 'dist')));
-
-// API routes with database connection check
-app.use('/api/auth', checkDbConnection, authRouter);
-app.use('/api/goals', checkDbConnection, goalsRouter);
-
-// Handle client-side routing
-app.get('*', (req, res) => {
-  res.sendFile(join(__dirname, 'dist', 'index.html'));
-});
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error('Global error handler:', err);
-  res.status(500).json({ 
-    message: 'Internal Server Error',
-    error: process.env.NODE_ENV === 'development' ? err.message : undefined,
-    timestamp: new Date().toISOString()
   });
 });
 
-// Handle uncaught exceptions
-process.on('uncaughtException', (error) => {
-  console.error('Uncaught Exception:', error);
-  setTimeout(() => process.exit(1), 1000);
-});
-
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-  setTimeout(() => process.exit(1), 1000);
-});
-
-// Start server with connection handling
-const startServer = async () => {
+app.get('/api/test-db', async (req, res) => {
   try {
     await connectDB();
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
+    res.json({ 
+      dbState: mongoose.connection.readyState,
+      stateMessage: ['disconnected', 'connected', 'connecting', 'disconnecting'][mongoose.connection.readyState],
+      host: mongoose.connection.host
     });
   } catch (error) {
-    console.error('Failed to start server:', error);
-    process.exit(1);
+    res.status(500).json({ 
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+});
+
+// Middleware to ensure DB connection
+const ensureDbConnection = async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    res.status(503).json({
+      message: 'Database connection failed',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Connection Error'
+    });
   }
 };
 
-startServer();
+// API routes
+app.use('/api/auth', ensureDbConnection, authRouter);
+app.use('/api/goals', ensureDbConnection, goalsRouter);
+
+// Serve static files
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(join(__dirname, 'dist')));
+  
+  app.get('*', (req, res) => {
+    res.sendFile(join(__dirname, 'dist', 'index.html'));
+  });
+}
+
+// Error handler
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(500).json({
+    message: 'Internal Server Error',
+    error: process.env.NODE_ENV === 'development' ? err.message : undefined
+  });
+});
+
+// Only start server if not in serverless environment
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 3001;
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
 
 export default app;
