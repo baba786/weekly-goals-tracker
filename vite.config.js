@@ -7,5 +7,15 @@ export default defineConfig({
     port: 5173,
     host: true,
     open: false
+  },
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    manifest: true,
+    rollupOptions: {
+      output: {
+        manualChunks: undefined
+      }
+    }
   }
 })
