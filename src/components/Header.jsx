@@ -7,7 +7,7 @@ const Header = ({ user, onLogout, onShowAuth }) => {
   const menuRef = useRef(null);
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
+    const handleClickOutside = event => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
         setShowMenu(false);
       }
@@ -21,7 +21,7 @@ const Header = ({ user, onLogout, onShowAuth }) => {
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           {/* Logo */}
-          <button 
+          <button
             onClick={() => window.location.reload()}
             className="flex items-center flex-shrink-0 hover:opacity-80 transition-opacity"
           >

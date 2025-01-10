@@ -13,17 +13,17 @@ const SimpleGoalEditor = ({ goal, onSave, onClose }) => {
     }
   }, []);
 
-  const adjustTextareaHeight = (element) => {
+  const adjustTextareaHeight = element => {
     element.style.height = 'auto';
     element.style.height = element.scrollHeight + 'px';
   };
 
-  const handleTextChange = (e) => {
+  const handleTextChange = e => {
     setText(e.target.value);
     adjustTextareaHeight(e.target);
   };
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = e => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSave();
@@ -42,13 +42,8 @@ const SimpleGoalEditor = ({ goal, onSave, onClose }) => {
       <div className="bg-white rounded-lg shadow-lg w-full max-w-md overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-          <h3 className="text-lg font-medium text-gray-900">
-            {goal ? 'Edit goal' : 'New goal'}
-          </h3>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-500 transition-colors"
-          >
+          <h3 className="text-lg font-medium text-gray-900">{goal ? 'Edit goal' : 'New goal'}</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-500 transition-colors">
             <X size={20} />
           </button>
         </div>
@@ -64,7 +59,7 @@ const SimpleGoalEditor = ({ goal, onSave, onClose }) => {
             className="w-full resize-none bg-gray-50 rounded-lg px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/10 text-base leading-relaxed"
             rows={1}
           />
-          
+
           <div className="mt-4 text-sm text-gray-500">
             Press Enter to save, Shift + Enter for new line, Esc to cancel
           </div>

@@ -3,30 +3,25 @@ import { Target, CheckCircle2, Sparkles, ArrowRight } from 'lucide-react';
 
 const DemoGoal = ({ text, delay = 0, onComplete }) => {
   const [checked, setChecked] = useState(false);
-  
+
   const handleCheck = () => {
     setChecked(!checked);
     if (!checked) onComplete?.();
   };
 
   return (
-    <div 
-      className={`flex items-center p-3 rounded-lg transition-all duration-300 animate-slide-up`} 
+    <div
+      className={`flex items-center p-3 rounded-lg transition-all duration-300 animate-slide-up`}
       style={{ animationDelay: `${delay}ms` }}
     >
-      <button
-        onClick={handleCheck}
-        className="flex-shrink-0 mr-3 focus:outline-none group"
-      >
+      <button onClick={handleCheck} className="flex-shrink-0 mr-3 focus:outline-none group">
         {checked ? (
           <CheckCircle2 className="w-5 h-5 text-green-500 animate-checkmark" />
         ) : (
           <div className="w-5 h-5 rounded-full border-2 border-gray-300 group-hover:border-gray-400" />
         )}
       </button>
-      <span className={checked ? 'text-gray-500 line-through' : 'text-gray-700'}>
-        {text}
-      </span>
+      <span className={checked ? 'text-gray-500 line-through' : 'text-gray-700'}>{text}</span>
     </div>
   );
 };
@@ -47,11 +42,13 @@ const LandingPage = ({ onGetStarted }) => {
                 Mindful Goal Setting
               </div>
               <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl md:text-6xl">
-                Less Goals.<br />
+                Less Goals.
+                <br />
                 More Impact.
               </h1>
               <p className="mt-6 text-lg text-gray-500">
-                Most goal trackers overwhelm you with endless lists. We help you focus on just 5 meaningful goals each week. Because sometimes, less is more.
+                Most goal trackers overwhelm you with endless lists. We help you focus on just 5
+                meaningful goals each week. Because sometimes, less is more.
               </p>
               <div className="mt-8 flex justify-center lg:justify-start space-x-4">
                 <button
@@ -80,7 +77,8 @@ const LandingPage = ({ onGetStarted }) => {
                   Focus on What Matters
                 </p>
                 <p className="mt-2 ml-16 text-base text-gray-500">
-                  By limiting to 5 goals per week, you're forced to prioritize what truly matters. No more endless to-do lists.
+                  By limiting to 5 goals per week, you're forced to prioritize what truly matters.
+                  No more endless to-do lists.
                 </p>
               </div>
               <div className="relative">
@@ -91,7 +89,8 @@ const LandingPage = ({ onGetStarted }) => {
                   Celebrate Every Win
                 </p>
                 <p className="mt-2 ml-16 text-base text-gray-500">
-                  Each completed goal is celebrated with delightful animations. Because small wins lead to big achievements.
+                  Each completed goal is celebrated with delightful animations. Because small wins
+                  lead to big achievements.
                 </p>
               </div>
             </div>
@@ -106,31 +105,31 @@ const LandingPage = ({ onGetStarted }) => {
                   <p className="text-sm text-gray-500">Try it out!</p>
                 </div>
                 <div className="h-1.5 w-24 bg-gray-100 rounded-full overflow-hidden">
-                  <div 
-                    className="bg-blue-500 h-full transition-all duration-500" 
+                  <div
+                    className="bg-blue-500 h-full transition-all duration-500"
                     style={{ width: `${(completedCount / totalGoals) * 100}%` }}
                   />
                 </div>
               </div>
-              
+
               <div className="space-y-1">
-                <DemoGoal 
-                  text="Launch new product feature" 
-                  delay={0} 
+                <DemoGoal
+                  text="Launch new product feature"
+                  delay={0}
                   onComplete={() => setCompletedCount(c => c + 1)}
                 />
-                <DemoGoal 
-                  text="Exercise 3 times this week" 
+                <DemoGoal
+                  text="Exercise 3 times this week"
                   delay={100}
                   onComplete={() => setCompletedCount(c => c + 1)}
                 />
-                <DemoGoal 
-                  text="Write blog post about mindfulness" 
+                <DemoGoal
+                  text="Write blog post about mindfulness"
                   delay={200}
                   onComplete={() => setCompletedCount(c => c + 1)}
                 />
-                <DemoGoal 
-                  text="Plan next quarter's goals" 
+                <DemoGoal
+                  text="Plan next quarter's goals"
                   delay={300}
                   onComplete={() => setCompletedCount(c => c + 1)}
                 />

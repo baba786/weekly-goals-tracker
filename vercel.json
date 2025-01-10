@@ -17,15 +17,26 @@
   "routes": [
     {
       "src": "/assets/(.*)",
-      "headers": { "cache-control": "public, max-age=31536000, immutable" },
+      "headers": { 
+        "cache-control": "public, max-age=31536000, immutable",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "X-Requested-With, Content-Type, Accept"
+      },
       "dest": "/assets/$1"
     },
     {
       "src": "/api/(.*)",
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "X-Requested-With, Content-Type, Accept"
+      },
       "dest": "/server.js"
     },
     {
       "src": "/(.*)\\.(.+)",
+      "headers": { "cache-control": "public, max-age=3600" },
       "dest": "/$1.$2"
     },
     {

@@ -2,17 +2,17 @@ import React, { useEffect, useState } from 'react';
 import confetti from 'canvas-confetti';
 
 const celebrationMessages = [
-  "Amazing work! 🌟",
+  'Amazing work! 🌟',
   "You're crushing it! 💪",
-  "Way to go! 🎯",
-  "Progress feels good! ✨",
-  "Keep shining! 🌈",
-  "You're on fire! 🔥"
+  'Way to go! 🎯',
+  'Progress feels good! ✨',
+  'Keep shining! 🌈',
+  "You're on fire! 🔥",
 ];
 
 const Celebration = ({ onComplete }) => {
-  const [message] = useState(() => 
-    celebrationMessages[Math.floor(Math.random() * celebrationMessages.length)]
+  const [message] = useState(
+    () => celebrationMessages[Math.floor(Math.random() * celebrationMessages.length)]
   );
 
   useEffect(() => {
@@ -38,12 +38,12 @@ const Celebration = ({ onComplete }) => {
       confetti({
         ...defaults,
         particleCount,
-        origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
+        origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
       });
       confetti({
         ...defaults,
         particleCount,
-        origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
+        origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
       });
     }, 250);
 

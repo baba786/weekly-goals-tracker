@@ -7,21 +7,21 @@ const GoalDetails = ({ goal, onClose, onEdit }) => {
     personal: { label: 'Personal', icon: '🎯', color: 'bg-green-100 text-green-700' },
     health: { label: 'Health', icon: '💪', color: 'bg-red-100 text-red-700' },
     learning: { label: 'Learning', icon: '📚', color: 'bg-purple-100 text-purple-700' },
-    creative: { label: 'Creative', icon: '🎨', color: 'bg-pink-100 text-pink-700' }
+    creative: { label: 'Creative', icon: '🎨', color: 'bg-pink-100 text-pink-700' },
   }[goal.category || 'work'];
 
   const priority = {
     high: { color: 'bg-red-100 text-red-700' },
     medium: { color: 'bg-yellow-100 text-yellow-700' },
-    low: { color: 'bg-blue-100 text-blue-700' }
+    low: { color: 'bg-blue-100 text-blue-700' },
   }[goal.priority || 'medium'];
 
-  const formatDate = (date) => {
+  const formatDate = date => {
     return new Date(date).toLocaleDateString('en-US', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
     });
   };
 
@@ -49,16 +49,18 @@ const GoalDetails = ({ goal, onClose, onEdit }) => {
             <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
               {/* Title and Tags */}
               <div className="mb-6">
-                <h3 className="text-2xl font-semibold text-gray-900 mb-3">
-                  {goal.text}
-                </h3>
+                <h3 className="text-2xl font-semibold text-gray-900 mb-3">{goal.text}</h3>
                 <div className="flex flex-wrap gap-2">
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${category.color}`}>
+                  <span
+                    className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${category.color}`}
+                  >
                     <span className="mr-1">{category.icon}</span>
                     {category.label}
                   </span>
                   {goal.priority && (
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${priority.color}`}>
+                    <span
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${priority.color}`}
+                    >
                       {goal.priority}
                     </span>
                   )}
@@ -72,9 +74,7 @@ const GoalDetails = ({ goal, onClose, onEdit }) => {
                     <Calendar size={16} className="mr-1" />
                     Due Date
                   </div>
-                  <div className="text-gray-900">
-                    {formatDate(goal.dueDate)}
-                  </div>
+                  <div className="text-gray-900">{formatDate(goal.dueDate)}</div>
                 </div>
               )}
 
@@ -94,7 +94,11 @@ const GoalDetails = ({ goal, onClose, onEdit }) => {
                         }`}
                       >
                         <span className="text-sm text-gray-500 mr-3">{index + 1}.</span>
-                        <span className={step.completed ? 'text-gray-500 line-through' : 'text-gray-900'}>
+                        <span
+                          className={
+                            step.completed ? 'text-gray-500 line-through' : 'text-gray-900'
+                          }
+                        >
                           {step.text}
                         </span>
                       </div>
