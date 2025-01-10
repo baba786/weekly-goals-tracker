@@ -25,7 +25,7 @@ const limiter = rateLimit({
 
 // Middleware
 app.use(cors({
-  origin: true, // Replace with your frontend URL in production
+  origin: true,
   credentials: true
 }));
 app.use(express.json());
@@ -34,30 +34,63 @@ app.use(limiter);
 // Configure mongoose
 mongoose.set('strictQuery', true);
 
+// Add test endpoints for debugging
+app.get('/api/test', (req, res) => {
+  res.json({ message: 'API is working' });
+});
+
+app.get('/api/test-db', async (req, res) => {
+  try {
+    const state = mongoose.connection.readyState;
+    res.json({ 
+      dbState: state,
+      stateMessage: ['disconnected', 'connected', 'connecting', 'disconnecting'][state],
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Initialize MongoDB connection
 const connectDB = async () => {
   try {
     if (!process.env.MONGODB_URI) {
       throw new Error('MongoDB URI is not defined in environment variables');
     }
+    console.log('MongoDB URI check passed, attempting connection...');
 
     const options = {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      bufferCommands: false, // Disable buffering for serverless
-      maxPoolSize: 1, // Minimize connections for serverless
-      serverSelectionTimeoutMS: 5000, // Reduce timeout for faster failure
-      socketTimeoutMS: 15000,
-      connectTimeoutMS: 10000,
+      bufferCommands: false,
+      maxPoolSize: 1,
+      serverSelectionTimeoutMS: 10000,
+      socketTimeoutMS: 20000,
+      connectTimeoutMS: 15000,
       retryWrites: true,
-      w: 'majority', // Add this for better write consistency
+      w: 'majority',
     };
 
     const conn = await mongoose.connect(process.env.MONGODB_URI, options);
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
+    console.log(`MongoDB Connected Successfully to: ${conn.connection.host}`);
+    
+    mongoose.connection.on('error', err => {
+      console.error('MongoDB connection error:', err);
+    });
+
+    mongoose.connection.on('disconnected', () => {
+      console.log('MongoDB disconnected');
+    });
+
     return conn;
   } catch (error) {
-    console.error(`MongoDB connection error: ${error.message}`);
+    console.error('Detailed MongoDB connection error:', {
+      message: error.message,
+      code: error.code,
+      name: error.name,
+      stack: error.stack
+    });
     throw error;
   }
 };
@@ -66,14 +99,21 @@ const connectDB = async () => {
 const checkDbConnection = async (req, res, next) => {
   try {
     if (mongoose.connection.readyState !== 1) {
+      console.log('Attempting to connect to MongoDB...');
       await connectDB();
+      console.log('Successfully connected to MongoDB');
     }
     next();
   } catch (error) {
-    console.error('Database connection error:', error);
+    console.error('Detailed DB connection error:', {
+      error: error.message,
+      code: error.code,
+      name: error.name,
+      stack: error.stack
+    });
     return res.status(503).json({
       message: 'Database connection not available. Please try again later.',
-      error: 'db_connection'
+      error: process.env.NODE_ENV === 'development' ? error.message : 'db_connection'
     });
   }
 };
@@ -92,7 +132,7 @@ app.get('*', (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error('Global error handler:', err);
   res.status(500).json({ 
     message: 'Internal Server Error',
     error: process.env.NODE_ENV === 'development' ? err.message : undefined
@@ -102,13 +142,15 @@ app.use((err, req, res, next) => {
 // Handle uncaught exceptions
 process.on('uncaughtException', (error) => {
   console.error('Uncaught Exception:', error);
-  process.exit(1);
+  // Allow graceful shutdown
+  setTimeout(() => process.exit(1), 1000);
 });
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-  process.exit(1);
+  // Allow graceful shutdown
+  setTimeout(() => process.exit(1), 1000);
 });
 
 // Start server with connection handling
