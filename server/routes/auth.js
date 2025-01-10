@@ -38,8 +38,19 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
-    if (user && (await user.matchPassword(password))) {
+    const user = await User.findOne({ email }).maxTimeMS(5000);
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
+
+    const isMatch = await Promise.race([
+      user.matchPassword(password),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Password verification timeout')), 5000)
+      )
+    ]);
+
+    if (isMatch) {
       res.json({
         _id: user._id,
         name: user.name,
@@ -50,7 +61,11 @@ router.post('/login', async (req, res) => {
       res.status(401).json({ message: 'Invalid email or password' });
     }
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    if (error.message === 'Password verification timeout') {
+      res.status(504).json({ message: 'Login request timed out. Please try again.' });
+    } else {
+      res.status(400).json({ message: error.message });
+    }
   }
 });
 

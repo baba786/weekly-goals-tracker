@@ -28,13 +28,16 @@ app.use(cors());
 app.use(express.json());
 app.use(limiter);
 
-// Connect to MongoDB with retry logic
+// Connect to MongoDB with retry logic and timeout settings
 const connectDB = async () => {
   try {
     const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/weekly-goals', {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       retryWrites: true,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+      connectTimeoutMS: 10000,
     });
     console.log(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
