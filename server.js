@@ -34,61 +34,43 @@ mongoose.set('strictQuery', true);
 // Initialize MongoDB connection
 const connectDB = async () => {
   try {
-    // Close any existing connection
-    if (mongoose.connection.readyState !== 0) {
-      await mongoose.connection.close();
+    if (!process.env.MONGODB_URI) {
+      throw new Error('MongoDB URI is not defined in environment variables');
     }
 
-    // Configure connection options
     const options = {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      retryWrites: true,
-      serverSelectionTimeoutMS: 30000,
-      socketTimeoutMS: 45000,
-      connectTimeoutMS: 30000,
-      maxPoolSize: 10,
-      minPoolSize: 2,
-      maxIdleTimeMS: 30000,
-      waitQueueTimeoutMS: 10000,
-      bufferCommands: true, // Enable command buffering
+      bufferCommands: false, // Disable buffering for serverless
+      maxPoolSize: 1, // Minimize connections for serverless
+      serverSelectionTimeoutMS: 5000, // Reduce timeout for faster failure
+      socketTimeoutMS: 15000,
+      connectTimeoutMS: 10000,
     };
 
-    // Connect to MongoDB
-    const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/weekly-goals', options);
+    const conn = await mongoose.connect(process.env.MONGODB_URI, options);
     console.log(`MongoDB Connected: ${conn.connection.host}`);
-
-    // Add connection error handlers
-    mongoose.connection.on('error', err => {
-      console.error('MongoDB connection error:', err);
-      if (err.name === 'MongoNetworkError') {
-        setTimeout(connectDB, 5000);
-      }
-    });
-
-    mongoose.connection.on('disconnected', () => {
-      console.log('MongoDB disconnected. Attempting to reconnect...');
-      setTimeout(connectDB, 5000);
-    });
-
     return conn;
   } catch (error) {
     console.error(`MongoDB connection error: ${error.message}`);
-    // Retry connection after delay
-    setTimeout(connectDB, 5000);
     throw error;
   }
 };
 
 // Middleware to check database connection
-const checkDbConnection = (req, res, next) => {
-  if (mongoose.connection.readyState !== 1) {
+const checkDbConnection = async (req, res, next) => {
+  try {
+    if (mongoose.connection.readyState !== 1) {
+      await connectDB();
+    }
+    next();
+  } catch (error) {
+    console.error('Database connection error:', error);
     return res.status(503).json({
       message: 'Database connection not available. Please try again later.',
       error: 'db_connection'
     });
   }
-  next();
 };
 
 // Serve static files from the dist directory
@@ -103,17 +85,17 @@ app.get('*', (req, res) => {
   res.sendFile(join(__dirname, 'dist', 'index.html'));
 });
 
-// Initialize database connection before starting server
-(async () => {
+// Start server with connection handling
+const startServer = async () => {
   try {
     await connectDB();
-    
-    // Start server only after successful database connection
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });
   } catch (error) {
-    console.error('Failed to initialize server:', error);
+    console.error('Failed to start server:', error);
     process.exit(1);
   }
-})();
+};
+
+startServer();
