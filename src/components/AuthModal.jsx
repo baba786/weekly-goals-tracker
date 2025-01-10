@@ -34,6 +34,19 @@ const AuthModal = ({ onClose, onAuth }) => {
       return;
     }
 
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setError('Please enter a valid email address');
+      return;
+    }
+
+    // Password strength validation
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters long');
+      return;
+    }
+
     if (isSignUp) {
       if (formData.password !== formData.confirmPassword) {
         setError('Passwords do not match');
@@ -43,14 +56,19 @@ const AuthModal = ({ onClose, onAuth }) => {
         setError('Name is required');
         return;
       }
+      if (formData.name.length < 2) {
+        setError('Name must be at least 2 characters long');
+        return;
+      }
     }
 
     setIsLoading(true);
     try {
       // Attempt authentication
-      onAuth(formData);
+      await onAuth(formData);
     } catch (err) {
-      setError('Authentication failed. Please try again.');
+      console.error('Auth error:', err);
+      setError(err.message || 'Authentication failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
