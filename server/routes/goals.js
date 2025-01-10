@@ -1,7 +1,11 @@
 import express from 'express';
 import Goal from '../models/Goal.js';
+import protect from '../middleware/auth.js';
 
 const router = express.Router();
+
+// Protect all routes
+router.use(protect);
 
 // Get current week's goals
 router.get('/current', async (req, res) => {
@@ -12,7 +16,8 @@ router.get('/current', async (req, res) => {
 
     const goals = await Goal.find({
       weekNumber: currentWeek,
-      year: currentYear
+      year: currentYear,
+      user: req.user._id
     }).sort({ createdAt: 1 });
 
     res.json(goals);
@@ -30,7 +35,8 @@ router.post('/', async (req, res) => {
 
     const goalsCount = await Goal.countDocuments({
       weekNumber: currentWeek,
-      year: currentYear
+      year: currentYear,
+      user: req.user._id
     });
 
     if (goalsCount >= 5) {
@@ -40,7 +46,8 @@ router.post('/', async (req, res) => {
     const goal = new Goal({
       text: req.body.text,
       weekNumber: currentWeek,
-      year: currentYear
+      year: currentYear,
+      user: req.user._id
     });
 
     const newGoal = await goal.save();
