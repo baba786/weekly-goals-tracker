@@ -1,137 +1,253 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, CheckCircle2, Circle, ChevronRight, Calendar, ArrowLeft } from 'lucide-react';
+import { Plus, Target } from 'lucide-react';
+import GoalItem from './GoalItem';
+import SimpleGoalEditor from './SimpleGoalEditor';
+import QuickGoalInput from './QuickGoalInput';
 
-const ThingsStyleApp = ({ onBack }) => {
-  const [goals, setGoals] = useState(() => {
-    const saved = localStorage.getItem('weeklyGoals');
-    return saved ? JSON.parse(saved) : [];
-  });
+// Using localStorage instead of API for now
+const STORAGE_KEY = 'weekly_goals';
+
+// Loading spinner component
+const LoadingSpinner = () => (
+  <div className="flex justify-center items-center p-8">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+  </div>
+);
+
+const ThingsStyleApp = ({ user }) => {
+  const [goals, setGoals] = useState([]);
   const [isAdding, setIsAdding] = useState(false);
-  const [newGoal, setNewGoal] = useState('');
-  
-  useEffect(() => {
-    localStorage.setItem('weeklyGoals', JSON.stringify(goals));
-  }, [goals]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [editingGoal, setEditingGoal] = useState(null);
 
-  const addGoal = (text) => {
-    if (goals.length >= 5 || !text.trim()) return;
-    setGoals([...goals, { 
-      id: Date.now(), 
-      text: text.trim(), 
-      completed: false 
-    }]);
-    setNewGoal('');
-    setIsAdding(false);
-  };
+  // Load goals from localStorage on component mount
+  useEffect(() => {
+    try {
+      setIsLoading(true);
+      const savedGoals = localStorage.getItem(STORAGE_KEY);
+      if (savedGoals) {
+        const parsedGoals = JSON.parse(savedGoals);
+        console.log('Loaded goals:', parsedGoals);
+        setGoals(parsedGoals.map(goal => ({
+          ...goal,
+          id: goal._id || goal.id || Date.now().toString() // Ensure each goal has an id
+        })));
+      }
+    } catch (err) {
+      console.error('Error loading goals:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   const toggleGoal = (id) => {
-    setGoals(goals.map(goal =>
-      goal.id === id ? { ...goal, completed: !goal.completed } : goal
-    ));
-  };
-
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && newGoal.trim()) {
-      addGoal(newGoal);
-    } else if (e.key === 'Escape') {
-      setIsAdding(false);
-      setNewGoal('');
+    console.log('Toggling goal with id:', id);
+    try {
+      const updatedGoals = goals.map(goal => {
+        if ((goal._id || goal.id) === id) {
+          console.log('Found goal to toggle:', goal);
+          return { ...goal, completed: !goal.completed };
+        }
+        return goal;
+      });
+      console.log('Updated goals:', updatedGoals);
+      setGoals(updatedGoals);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedGoals));
+      setError(null);
+    } catch (err) {
+      setError('Failed to update goal. Please try again.');
+      console.error('Error updating goal:', err);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100/80 px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100/80 px-4 py-8">
       <div className="max-w-2xl mx-auto">
-        {/* Header Area with Back Button */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center">
-            <button 
-              onClick={onBack}
-              className="mr-4 p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-200/50 transition-colors"
-            >
-              <ArrowLeft size={20} />
-            </button>
-            <div>
-              <h1 className="text-2xl font-medium text-gray-900">This Week</h1>
-              <p className="text-sm text-gray-500 mt-1">
+        {/* Simple Progress Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-medium text-gray-900">This Week's Focus</h1>
+            {goals.length > 0 && (
+              <span className="text-sm bg-blue-50 text-blue-700 px-3 py-1 rounded-full">
                 {goals.filter(g => g.completed).length} of {goals.length} completed
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center space-x-4">
-            <button className="p-2 text-gray-400 hover:text-gray-600">
-              <Calendar size={20} />
-            </button>
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200/50">
-          {/* Goals List */}
-          <div className="divide-y divide-gray-100">
-            {goals.map((goal, index) => (
-              <div 
-                key={goal.id}
-                className={`group flex items-center p-4 hover:bg-gray-50 transition-colors
-                  ${index === 0 ? 'rounded-t-xl' : ''} 
-                  ${index === goals.length - 1 && !isAdding ? 'rounded-b-xl' : ''}`}
-              >
-                <button
-                  onClick={() => toggleGoal(goal.id)}
-                  className="flex-shrink-0 mr-3 text-gray-400 hover:text-blue-500 transition-colors"
-                >
-                  {goal.completed ? 
-                    <CheckCircle2 size={22} className="text-blue-500" /> : 
-                    <Circle size={22} />
-                  }
-                </button>
-                <span className={`flex-grow text-base ${
-                  goal.completed ? 'text-gray-400 line-through' : 'text-gray-900'
-                }`}>
-                  {goal.text}
-                </span>
-                <ChevronRight size={18} className="text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity" />
-              </div>
-            ))}
-
-            {/* Add Goal Input */}
-            {isAdding && (
-              <div className="p-4 bg-gray-50/50">
-                <input
-                  autoFocus
-                  type="text"
-                  value={newGoal}
-                  onChange={(e) => setNewGoal(e.target.value)}
-                  onKeyDown={handleKeyPress}
-                  onBlur={() => {
-                    if (newGoal.trim()) addGoal(newGoal);
-                    else setIsAdding(false);
-                  }}
-                  placeholder="New Goal"
-                  className="w-full bg-transparent text-base text-gray-900 placeholder-gray-400 outline-none"
-                />
-              </div>
+              </span>
             )}
           </div>
-
-          {/* Add Button */}
-          {!isAdding && goals.length < 5 && (
-            <button
-              onClick={() => setIsAdding(true)}
-              className="w-full flex items-center p-4 text-gray-500 hover:text-gray-900 hover:bg-gray-50 rounded-b-xl transition-colors"
-            >
-              <Plus size={22} className="mr-3" />
-              <span className="text-base">Add Goal</span>
-            </button>
+          
+          {/* Weekly Progress Bar */}
+          {goals.length > 0 && (
+            <div className="mt-4 bg-gray-100 rounded-full h-1.5 overflow-hidden">
+              <div 
+                className="bg-blue-500 h-full transition-all duration-500 ease-out"
+                style={{ 
+                  width: `${(goals.filter(g => g.completed).length / goals.length) * 100}%`,
+                  transition: 'width 0.5s ease-out'
+                }}
+              />
+            </div>
           )}
         </div>
 
-        {/* Quick Tips */}
-        {goals.length === 0 && !isAdding && (
-          <div className="mt-8 text-center text-gray-500 text-sm">
-            <p>Set up to 5 key goals for this week.</p>
-            <p>Keep them achievable and specific.</p>
+        {/* Error Message */}
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 shadow-sm animate-fade-in">
+            <div className="flex items-center">
+              <span className="font-medium">{error}</span>
+              <button 
+                onClick={() => setError(null)}
+                className="ml-auto text-red-500 hover:text-red-700"
+              >
+                ×
+              </button>
+            </div>
           </div>
+        )}
+
+        {/* Main Content */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200/50 backdrop-blur-sm backdrop-filter">
+          {isLoading ? (
+            <LoadingSpinner />
+          ) : (
+            <>
+              {/* Active Goals */}
+              <div className="space-y-2 p-2">
+                {goals.filter(g => !g.completed).map((goal) => (
+                  <GoalItem
+                    key={goal._id || goal.id}
+                    goal={goal}
+                    onToggle={toggleGoal}
+                    onEdit={() => setEditingGoal(goal)}
+                  />
+                ))}
+
+                {/* Add Goal Input */}
+                {isAdding && (
+                  <div className="p-2">
+                    <QuickGoalInput
+                      onSave={(goalData) => {
+                        try {
+                          const newGoal = {
+                            id: Date.now().toString(),
+                            text: goalData.text,
+                            completed: false,
+                            createdAt: new Date().toISOString()
+                          };
+                          
+                          console.log('Adding new goal:', newGoal);
+                          const updatedGoals = [...goals, newGoal];
+                          setGoals(updatedGoals);
+                          localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedGoals));
+                          setIsAdding(false);
+                        } catch (err) {
+                          setError('Failed to save goal. Please try again.');
+                          console.error('Error saving goal:', err);
+                        }
+                      }}
+                      onCancel={() => setIsAdding(false)}
+                    />
+                  </div>
+                )}
+
+                {/* Add Button */}
+                {!isAdding && goals.length < 5 && (
+                  <button
+                    onClick={() => setIsAdding(true)}
+                    className="w-full flex items-center p-4 text-gray-500 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-all duration-200"
+                  >
+                    <Plus size={22} className="mr-3" />
+                    <span className="text-base">Add Goal</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Completed Goals */}
+              {goals.some(g => g.completed) && (
+                <div className="mt-4 pt-4 border-t border-gray-100 px-4 pb-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-sm font-medium text-gray-500">Completed</h2>
+                    <button
+                      onClick={() => {
+                        const completedGoals = goals.filter(g => g.completed);
+                        // Archive completed goals
+                        localStorage.setItem('archived_goals', JSON.stringify([
+                          ...JSON.parse(localStorage.getItem('archived_goals') || '[]'),
+                          ...completedGoals
+                        ]));
+                        // Remove completed goals from current list
+                        const activeGoals = goals.filter(g => !g.completed);
+                        setGoals(activeGoals);
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify(activeGoals));
+                      }}
+                      className="text-xs text-gray-400 hover:text-gray-600 px-2 py-1 rounded hover:bg-gray-50"
+                    >
+                      Archive all completed
+                    </button>
+                  </div>
+                  <div className="space-y-1 opacity-60">
+                    {goals.filter(g => g.completed).map((goal) => (
+                      <GoalItem
+                        key={goal._id || goal.id}
+                        goal={goal}
+                        onToggle={toggleGoal}
+                        onEdit={() => setEditingGoal(goal)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Empty State */}
+        {!isLoading && goals.length === 0 && !isAdding && (
+          <div className="mt-12 text-center">
+            <div className="max-w-sm mx-auto">
+              <div className="mb-6">
+                <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Target className="w-8 h-8 text-blue-500" />
+                </div>
+                <h3 className="text-xl font-medium text-gray-900">Start Your Week with Purpose</h3>
+                <p className="mt-2 text-gray-500">
+                  What are the most important things you want to achieve this week?
+                </p>
+              </div>
+              
+              <button
+                onClick={() => setIsAdding(true)}
+                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Plus className="w-5 h-5 mr-1.5" />
+                Add Your First Goal
+              </button>
+
+              <div className="mt-8 pt-8 border-t border-gray-100">
+                <h4 className="text-sm font-medium text-gray-900 mb-3">Quick Tips</h4>
+                <ul className="text-sm text-gray-500 space-y-2">
+                  <li>• Focus on 3-5 key goals for the week</li>
+                  <li>• Make them specific and achievable</li>
+                  <li>• Start with what matters most</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Goal Editor Modal */}
+        {editingGoal && (
+          <SimpleGoalEditor
+            goal={editingGoal}
+            onSave={(updatedGoal) => {
+              const updatedGoals = goals.map(g =>
+                (g._id || g.id) === (updatedGoal._id || updatedGoal.id) ? updatedGoal : g
+              );
+              setGoals(updatedGoals);
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedGoals));
+              setEditingGoal(null);
+            }}
+            onClose={() => setEditingGoal(null)}
+          />
         )}
       </div>
     </div>

@@ -7,13 +7,13 @@
     "dev": "vite",
     "build": "vite build",
     "vercel-build": "vite build",
-    "start": "node server.js",
     "lint": "eslint src --ext .js,.jsx,.ts,.tsx",
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\"",
-    "preview": "vite preview"
+    "dev:local": "concurrently \"npm run dev\" \"nodemon server-local.js\""
   },
   "dependencies": {
-    "canvas-confetti": "^1.9.2",
+    "@esbuild/darwin-x64": "^0.24.2",
+    "canvas-confetti": "^1.9.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
