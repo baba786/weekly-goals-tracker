@@ -8,10 +8,28 @@ import LandingPage from './components/LandingPage';
 import { useAuth } from './context/AuthContext';
 
 function App() {
-  const { user, logout } = useAuth();
+  const { user, logout, login, register } = useAuth();
   const [showAuth, setShowAuth] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [view, setView] = useState(() => user ? 'goals' : 'landing');
+  const [error, setError] = useState(null);
+
+  const handleAuth = async (formData) => {
+    try {
+      if (formData.name) {
+        // Register
+        await register(formData.name, formData.email, formData.password);
+      } else {
+        // Login
+        await login(formData.email, formData.password);
+      }
+      setShowAuth(false);
+      setView('goals');
+    } catch (err) {
+      console.error('Authentication failed:', err);
+      setError('Authentication failed. Please try again.');
+    }
+  };
 
   const handleLogout = () => {
     logout();
