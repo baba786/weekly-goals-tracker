@@ -4,7 +4,9 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "node dev.js",
+    "dev:frontend": "vite",
+    "dev:backend": "node server.js",
     "build": "vite build",
     "vercel-build": "npm run build",
     "start": "node server.js",
@@ -13,7 +15,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "bcryptjs": "^2.4.3",
     "canvas-confetti": "^1.9.2",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
@@ -21,7 +22,6 @@
     "express-rate-limit": "^7.5.0",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.263.1",
-    "mongoose": "^8.9.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

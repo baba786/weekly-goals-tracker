@@ -18,10 +18,14 @@ router.get('/current', async (req, res) => {
       weekNumber: currentWeek,
       year: currentYear,
       user: req.user._id
-    }).sort({ createdAt: 1 });
+    });
+    
+    // Sort by createdAt
+    goals.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 
     res.json(goals);
   } catch (error) {
+    console.error('Error fetching goals:', error);
     res.status(500).json({ message: error.message });
   }
 });
@@ -43,32 +47,72 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ message: 'Maximum 5 goals allowed per week' });
     }
 
-    const goal = new Goal({
+    const newGoal = await Goal.create({
       text: req.body.text,
       weekNumber: currentWeek,
       year: currentYear,
       user: req.user._id
     });
-
-    const newGoal = await goal.save();
+    
     res.status(201).json(newGoal);
   } catch (error) {
+    console.error('Error creating goal:', error);
     res.status(400).json({ message: error.message });
   }
 });
 
 // Toggle goal completion
-router.patch('/:id', async (req, res) => {
+router.patch('/:id/toggle', async (req, res) => {
   try {
     const goal = await Goal.findById(req.params.id);
+    
+    if (!goal) {
+      return res.status(404).json({ message: 'Goal not found' });
+    }
+    
+    // Verify ownership
+    if (goal.user !== req.user._id) {
+      return res.status(403).json({ message: 'Not authorized to update this goal' });
+    }
+
+    const updatedGoal = await Goal.findByIdAndUpdate(req.params.id, {
+      completed: !goal.completed
+    });
+    
+    res.json(updatedGoal);
+  } catch (error) {
+    console.error('Error toggling goal completion:', error);
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// Update goal text
+router.patch('/:id', async (req, res) => {
+  try {
+    const { text } = req.body;
+    
+    if (!text || !text.trim()) {
+      return res.status(400).json({ message: 'Goal text is required' });
+    }
+    
+    const goal = await Goal.findById(req.params.id);
+    
     if (!goal) {
       return res.status(404).json({ message: 'Goal not found' });
     }
 
-    goal.completed = !goal.completed;
-    const updatedGoal = await goal.save();
+    // Make sure user owns this goal
+    if (goal.user !== req.user._id) {
+      return res.status(403).json({ message: 'Not authorized to update this goal' });
+    }
+
+    const updatedGoal = await Goal.findByIdAndUpdate(req.params.id, {
+      text: text.trim()
+    });
+    
     res.json(updatedGoal);
   } catch (error) {
+    console.error('Error updating goal text:', error);
     res.status(400).json({ message: error.message });
   }
 });

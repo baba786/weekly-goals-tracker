@@ -1,6 +1,5 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
-import mongoose from 'mongoose';
 import User from '../models/User.js';
 
 const router = express.Router();
@@ -31,57 +30,47 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ message: 'Name must be at least 2 characters long' });
     }
 
-    // Check database connection
-    if (!mongoose.connection.readyState) {
-      return res.status(503).json({ 
-        message: 'Service temporarily unavailable. Please try again later.',
-        error: 'db_connection'
-      });
-    }
-
     // Check if user exists
-    let userExists;
     try {
-      userExists = await User.findOne({ email }).maxTimeMS(5000).exec();
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        return res.status(400).json({ message: 'User already exists' });
+      }
     } catch (error) {
       console.error('Error checking existing user:', error);
-      return res.status(503).json({ 
+      return res.status(500).json({ 
         message: 'Error checking user existence. Please try again.',
-        error: 'db_query'
+        error: 'query_error'
       });
-    }
-
-    if (userExists) {
-      return res.status(400).json({ message: 'User already exists' });
     }
 
     // Create new user
-    let user;
     try {
-      user = new User({ name, email, password });
-      await user.save({ maxTimeMS: 10000 });
+      const user = await User.create({ name, email, password });
+
+      // Generate token and send response
+      const token = generateToken(user._id);
+      res.status(201).json({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        token
+      });
     } catch (error) {
       console.error('Error creating user:', error);
-      if (error.code === 11000) {
+      
+      if (error.message === 'Email already exists') {
         return res.status(400).json({ 
           message: 'User already exists',
           error: 'duplicate'
         });
       }
-      return res.status(503).json({ 
+      
+      return res.status(500).json({ 
         message: 'Error creating user. Please try again.',
-        error: 'db_save'
+        error: error.message
       });
     }
-
-    // Generate token and send response
-    const token = generateToken(user._id);
-    res.status(201).json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      token
-    });
 
   } catch (error) {
     console.error('Registration error:', error);
@@ -108,54 +97,41 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Please provide a valid email address' });
     }
 
-    // Check database connection
-    if (!mongoose.connection.readyState) {
-      return res.status(503).json({ 
-        message: 'Service temporarily unavailable. Please try again later.',
-        error: 'db_connection'
-      });
-    }
-
     // Find user
-    let user;
     try {
-      user = await User.findOne({ email }).maxTimeMS(5000).exec();
+      const user = await User.findOne({ email });
+      
+      if (!user) {
+        return res.status(401).json({ message: 'Invalid email or password' });
+      }
+
+      // Verify password
+      console.log('Attempting to verify password for:', user.email);
+      console.log('Password in database:', user.password);
+      
+      const isMatch = await User.matchPassword(user, password);
+      console.log('Password match result:', isMatch);
+
+      if (!isMatch) {
+        return res.status(401).json({ message: 'Invalid email or password' });
+      }
+
+      // Generate token and send response
+      const token = generateToken(user._id);
+      
+      res.json({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        token
+      });
     } catch (error) {
-      console.error('Error finding user:', error);
-      return res.status(503).json({ 
+      console.error('Error during login:', error);
+      return res.status(500).json({ 
         message: 'Error during login. Please try again.',
-        error: 'db_query'
+        error: error.message
       });
     }
-
-    if (!user) {
-      return res.status(401).json({ message: 'Invalid email or password' });
-    }
-
-    // Verify password
-    let isMatch;
-    try {
-      isMatch = await user.matchPassword(password);
-    } catch (error) {
-      console.error('Error verifying password:', error);
-      return res.status(503).json({ 
-        message: 'Error verifying credentials. Please try again.',
-        error: 'password_verify'
-      });
-    }
-
-    if (!isMatch) {
-      return res.status(401).json({ message: 'Invalid email or password' });
-    }
-
-    // Generate token and send response
-    const token = generateToken(user._id);
-    res.json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      token
-    });
 
   } catch (error) {
     console.error('Login error:', error);

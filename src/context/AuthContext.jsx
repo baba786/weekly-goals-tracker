@@ -95,8 +95,22 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  // Direct method to set user (for social logins)
+  const socialLogin = (userData) => {
+    localStorage.setItem('user', JSON.stringify(userData));
+    setUser(userData);
+    return userData;
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      login, 
+      register, 
+      logout, 
+      loading,
+      setUser: socialLogin // Expose method to directly set user
+    }}>
       {children}
     </AuthContext.Provider>
   );

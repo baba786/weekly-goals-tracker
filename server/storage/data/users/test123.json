@@ -1,0 +1,8 @@
+{
+  "_id": "test123",
+  "name": "Test User",
+  "email": "test@example.com",
+  "password": "123456789012:e58853fe2d24cbba630506beffaf07e0c0705fb4181226915ac3c66a02c2650e",
+  "createdAt": "2025-03-18T00:00:00.000Z",
+  "updatedAt": "2025-03-18T00:00:00.000Z"
+}

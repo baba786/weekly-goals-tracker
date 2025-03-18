@@ -8,7 +8,7 @@ import LandingPage from './components/LandingPage';
 import { useAuth } from './context/AuthContext';
 
 function App() {
-  const { user, logout, login, register } = useAuth();
+  const { user, logout, login, register, setUser } = useAuth();
   const [showAuth, setShowAuth] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [view, setView] = useState(() => (user ? 'goals' : 'landing'));
@@ -16,13 +16,27 @@ function App() {
 
   const handleAuth = async formData => {
     try {
-      if (formData.name) {
-        // Register
+      // Check if it's a social login (has provider property)
+      if (formData.provider) {
+        // For the demo, we're simulating social login
+        // In a real app, this would be handled differently with OAuth
+        const userData = {
+          _id: `demo-${formData.provider.toLowerCase()}-id`,
+          name: formData.name,
+          email: formData.email,
+          provider: formData.provider,
+          token: `simulated-token-${Date.now()}`
+        };
+        // Use the AuthContext's setUser method
+        setUser(userData);
+      } else if (formData.name) {
+        // Register with email/password
         await register(formData.name, formData.email, formData.password);
       } else {
-        // Login
+        // Login with email/password
         await login(formData.email, formData.password);
       }
+      
       setShowAuth(false);
       setView('goals');
     } catch (err) {
